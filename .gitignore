@@ -1,0 +1,15 @@
+*.bin
+*.rel
+*.asm
+*.lst
+*.sym
+*.ihx
+*.lk
+*.map
+*.mem
+*.rst
+*.o
+*.elf
+nrf_gtk
+nrfprog
+
