@@ -196,6 +196,7 @@ usb_dev_handle *P_Scan()
 					}
 				}
 				usb_close(dh);
+				dh = NULL;
 			}
 		}
 	}
