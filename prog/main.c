@@ -16,7 +16,7 @@
 
 #define VENDOR_STRING	"kgsws"
 #define PRODUCT_STRING	"nRF24L Transceiver"
-#define PRODUCT_VERSION	"4.0"
+#define PRODUCT_VERSION	"4.1"
 
 #define FSR_RESERVED0 (1 << 0)
 #define FSR_RDISIP    (1 << 1)
@@ -48,6 +48,7 @@ enum
 	PTIN_ERASE_ALL,
 	PTIN_GET_FSR,
 	PTIN_READ,
+	PTIN_PRGOUT,
 
 	//// set mode
 	PTIN_MODE = 0xFF
@@ -410,6 +411,16 @@ int P_fsr_check(int infopage)
 	return 0;
 }
 
+void P_set_prog_out(int state)
+{
+	uint8_t req[] = {PTIN_PRGOUT, state};
+
+	irq_wait = -1;
+	if(usb_bulk_write(handle, 0x01, (void*)req, sizeof(req), 100) != sizeof(req))
+		error = 1;
+	usleep(100*1000);
+}
+
 int get_hex(char in)
 {
 	if(in >= '0' && in <= '9')
@@ -604,7 +615,7 @@ int main(int argc, char **argv)
 	handle = P_Scan();
 	if(!handle)
 	{
-		printf("- unable to find programmer\n");
+		printf("- unable to find suitable programmer\n");
 		return 1;
 	}
 
@@ -617,6 +628,9 @@ int main(int argc, char **argv)
 
 	// set prog mode
 	P_ModuleMode(MODE_PROG);
+
+	// set prog output pin
+	P_set_prog_out(1);
 
 	pthread_create(&dev_th, NULL, (void*)irq_thread, NULL);
 	usleep(1000);
@@ -809,6 +823,9 @@ int main(int argc, char **argv)
 		}
 		break;
 	}
+
+	// set prog output pin
+	P_set_prog_out(0);
 
 	// finish
 	printf("- finished\n");

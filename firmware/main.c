@@ -45,6 +45,7 @@ enum
 	PTIN_ERASE_ALL,
 	PTIN_GET_FSR,
 	PTIN_READ,
+	PTIN_PRGOUT,
 
 	//// set mode
 	PTIN_MODE = 0xFF
@@ -136,6 +137,7 @@ uint8_t dyn;
 #define err_msg(x)	{in1buf[0]=PTOUT_MESSAGE;in1buf[1]=x;in1bc=2;while(!(in1cs & 0x02));break;}
 
 #define PROG_CS(x)	P03 = !x;wait(64)
+#define PROG_OUT(x)	P05 = x;wait(64)
 
 #define in_conf	((__xdata config_t*)out1buf)
 #define in_pipe	((__xdata pipes_t*)out1buf)
@@ -543,6 +545,12 @@ void main()
 						in1bc = 33;
 						while(!(in1cs & 0x02));
 					break;
+					case PTIN_PRGOUT:
+						if(mode != MODE_PROG)
+							err_msg(0x80)
+						// set PROG output
+						PROG_OUT(out1buf[1]);
+					break;
 //
 //	mode swap
 //
@@ -552,6 +560,7 @@ void main()
 						switch(mode)
 						{
 							case MODE_HIZ:
+								PROG_OUT(0);
 								SMCTRL = 0;
 								P0DIR = 0b11111111;
 								P0EXP = 0;
@@ -564,8 +573,9 @@ void main()
 								P0ALT = 0;
 							break;
 							case MODE_PROG:
-								P0DIR = 0b11110100;
+								P0DIR = 0b11010100;
 								PROG_CS(0);
+								PROG_OUT(0);
 								SMCTRL = 0b00010110; // 64 CLKDIV
 								P0EXP = 1;
 								P0ALT = 0b111;
